@@ -39,8 +39,8 @@ body:
   - type: textarea
     id: otherinfo
     attributes:
-      label: 其他信息
+      label: 健康检查
       description: 如果你还能找到其他信息可以帮助问题排查，请尽可能多补充。
-      placeholder: "媒体服务/下载器/tmdb访问状态等截图"
+      placeholder: "应用设置中，点击顶部健康检查，截图"
     validations:
-      required: false
+      required: true
