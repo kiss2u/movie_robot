@@ -3,8 +3,8 @@ import logging
 import os.path
 import sys
 
-from yee.commandactions import CommandActions
-from yee.register.config_register import words_config, base_config, get_server_url, init_log, init_config
+from mbot.commandactions import CommandActions
+from mbot.register.config_register import words_config, base_config, get_server_url, init_log, init_config
 
 
 def parser_args():

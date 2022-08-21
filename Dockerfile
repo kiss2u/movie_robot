@@ -9,7 +9,7 @@ RUN --mount=type=cache,target=/root/.cache,id=slim_pip_cache_$TARGETARCH python 
 	&& pip install --target=/dependencies -r requirements.txt \
 	&& pip install --target=/dependencies Cython
 COPY app /app
-COPY yee /app/yee
+COPY mbot /app/yee
 WORKDIR /app
 RUN --mount=type=cache,target=/app/build,id=cython_cache_$TARGETARCH  python setup_in_docker.py build_ext --inplace  \
 	&& rm -rf setup_in_docker.py requirements.txt \

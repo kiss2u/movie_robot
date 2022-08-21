@@ -23,8 +23,12 @@ category_mappings:
   - { id: 413, cate_level1: TV, cate_level2: TV, cate_level2_desc: "TV Series/海外剧集(合集）" }
   - { id: 414, cate_level1: TV, cate_level2: TV, cate_level2_desc: "TV Shows/海外综艺(分集）" }
   - { id: 415, cate_level1: TV, cate_level2: TV, cate_level2_desc: "TV Shows/海外综艺(合集）" }
-
-
+#请求间隔设定
+request_interval:
+  #下载间隔时间，在min-max之间随机
+  download:
+    min: 5
+    max: 10
 userinfo:
   path: https://hdsky.me/rules.php
   item:
@@ -97,6 +101,13 @@ search:
     page: "{{ query.page }}"
 download:
   method: POST
+  content_type: "application/x-www-form-urlencoded"
+  #hdsky post时会带两个随机数参数
+  args:
+    - name: x
+      value: "{{ range(5, 20) | random }}"
+    - name: y
+      value: "{{ range(5, 20) | random }}"
 torrents:
   list:
     selector: table.torrents > tr:has(table.torrentname)

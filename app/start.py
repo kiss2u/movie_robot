@@ -4,9 +4,9 @@ import os
 import shutil
 import sys
 
-from yee.Constants import APP_VERSION
-from yee.register.config_register import get_server_url, init_log, init_config
-from yee.upgrade import Upgrade
+from mbot.Constants import APP_VERSION
+from mbot.register.config_register import get_server_url, init_log, init_config
+from mbot.upgrade import Upgrade
 
 
 def parser_args():
@@ -48,7 +48,7 @@ if __name__ == '__main__':
     os.environ['WORKDIR'] = workdir
     init_log(workdir)
     init_config(base_path, workdir)
-    import yee.app as app
+    import mbot.app as app
 
     logging.info(f'当前版本: {APP_VERSION}')
 

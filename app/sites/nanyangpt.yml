@@ -93,7 +93,7 @@ search:
 
 torrents:
   list:
-    selector: table.torrents > form > tr:has(table.torrentname)
+    selector: table.torrents > tr:has(table.torrentname)
   fields:
     id:
       selector: a[href^="details.php?id="]
@@ -124,7 +124,7 @@ torrents:
       selector: a[href^="download.php?id="]
       attribute: href
     imdbid:
-      selector: div.imdb_100 > a
+      selector: a[href^="https://www.imdb.com/title/]
       attribute: href
       filters:
         - name: re_search
