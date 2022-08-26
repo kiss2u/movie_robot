@@ -1,4 +1,3 @@
-import json
 import logging
 
 import httpx
@@ -16,6 +15,7 @@ class TelegramNotify(Notify):
         self.token = args.get('token')
         self.proxy = args.get('proxy')
         self.chat_id = args.get('chat_id')
+        self.server_url = args.get('server_url', 'https://api.telegram.org')
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(5))
     def send_text_message(self, title_message, text_message, to_user):
@@ -30,7 +30,7 @@ class TelegramNotify(Notify):
         message = f'*{title_message}*\r\n{text_message}'
         # 发送
         res = httpx.post(
-            'https://api.telegram.org/bot%s/sendMessage' % self.token,
+            '%s/bot%s/sendMessage' % (self.server_url, self.token),
             params={
                 'chat_id': self.chat_id,
                 'parse_mode': 'MarkdownV2',
@@ -61,7 +61,7 @@ class TelegramNotify(Notify):
         message += f'{StringUtils.render_text(body_template, **context)}'
 
         if context and context.get('pic_url'):
-            url = 'https://api.telegram.org/bot%s/sendPhoto' % self.token
+            url = '%s/bot%s/sendPhoto' % (self.server_url, user_id)
             data = {
                 'chat_id': self.chat_id,
                 'parse_mode': 'MarkdownV2',
@@ -69,7 +69,7 @@ class TelegramNotify(Notify):
                 'caption': message
             }
         else:
-            url = 'https://api.telegram.org/bot%s/sendMessage' % self.token
+            url = '%s/bot%s/sendMessage' % (self.server_url, user_id)
             data = {
                 'chat_id': self.chat_id,
                 'parse_mode': 'MarkdownV2',
