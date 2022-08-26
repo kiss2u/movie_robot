@@ -30,7 +30,7 @@ class TelegramNotify(Notify):
         message = f'*{title_message}*\r\n{text_message}'
         # 发送
         res = httpx.post(
-            'https://api.telegram.org/bot%s/sendMessage?' % self.token,
+            'https://api.telegram.org/bot%s/sendMessage' % self.token,
             params={
                 'chat_id': self.chat_id,
                 'parse_mode': 'MarkdownV2',
