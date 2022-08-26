@@ -33,7 +33,7 @@ class TelegramNotify(Notify):
             'https://api.telegram.org/bot%s/sendMessage?' % self.token,
             params={
                 'chat_id': self.chat_id,
-                'parse_mode': 'markdown',
+                'parse_mode': 'MarkdownV2',
                 'text': message,
             },
             proxies=self.proxy
@@ -57,22 +57,22 @@ class TelegramNotify(Notify):
             logging.error('没有可用的chat_id，无法推送')
             return
 
-        message = f'*[{StringUtils.render_text(title_template, **context)}*\r\n \
-                     {StringUtils.render_text(body_template, **context)}'
+        message = f'*{StringUtils.render_text(title_template, **context)}*\r\n'
+        message += f'{StringUtils.render_text(body_template, **context)}'
 
         if context and context.get('pic_url'):
-            url = 'https://api.telegram.org/bot%s/sendPhoto?' % self.token,
+            url = 'https://api.telegram.org/bot%s/sendPhoto' % self.token
             data = {
-                'chat_id': user_id,
-                'parse_mode': 'markdown',
+                'chat_id': self.chat_id,
+                'parse_mode': 'MarkdownV2',
                 'photo': context.get('pic_url'),
-                'caption': message + f'\r\n[查看详细]({context.get("link_url")})'
+                'caption': message
             }
         else:
-            url = 'https://api.telegram.org/bot%s/sendMessage?' % self.token,
+            url = 'https://api.telegram.org/bot%s/sendMessage' % self.token
             data = {
-                'chat_id': user_id,
-                'parse_mode': 'markdown',
+                'chat_id': self.chat_id,
+                'parse_mode': 'MarkdownV2',
                 'text': message,
             }
 
