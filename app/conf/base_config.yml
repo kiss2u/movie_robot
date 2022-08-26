@@ -153,3 +153,20 @@ notify_channel:
         message: |
           ## ${nickname} 想看的 剧集 ${name}(${year})第${episodes}集下载完毕
           ![${name}](${cover})
+  telegram:
+    # Bot token
+    token: ''
+    # 代理
+    proxy: ''
+    users:
+      - nickname: 'user1'
+        touser: ''
+      - nickname: 'user2'
+        touser: ''
+    message_template:
+      movie_completed:
+        title: '${name} \(${year}\) 下载完毕'
+        message: ${nickname} 想看的 电影 ${name}\(${year}\)下载完毕
+      series_completed:
+        title: '${name} \(${year}\) 下载完毕'
+        message: ${nickname} 想看的 剧集 ${name}\(${year}\)第${episodes}集下载完毕

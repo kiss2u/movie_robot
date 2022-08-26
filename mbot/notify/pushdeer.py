@@ -30,7 +30,7 @@ class PushdeerNotify(Notify):
         if res["content"]["result"]:
             result = json.loads(res["content"]["result"][0])
             if result["success"] != "ok":
-                logging.error('pushdeer推送失败：%s' % res.json())
+                logging.error('pushdeer推送失败：%s' % res)
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(5))
     def send_by_template(self, user_id, title_template, body_template, context: dict):
@@ -56,4 +56,4 @@ class PushdeerNotify(Notify):
         if res["content"]["result"]:
             result = json.loads(res["content"]["result"][0])
             if result["success"] != "ok":
-                logging.error('pushdeer推送失败：%s' % res.json())
+                logging.error('pushdeer推送失败：%s' % res)
