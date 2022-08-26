@@ -23,16 +23,15 @@ class TelegramNotify(Notify):
         if not self.token:
             logging.error('没有可用的telegram token，无法推送')
             return
-        if not self.chat_id:
-            logging.error('没有可用的chat_id，无法推送')
-            return
+        if not to_user:
+            to_user = self.chat_id
         # 拼接
         message = f'*{title_message}*\r\n{text_message}'
         # 发送
         res = httpx.post(
             '%s/bot%s/sendMessage' % (self.server_url, self.token),
             params={
-                'chat_id': self.chat_id,
+                'chat_id': to_user,
                 'parse_mode': 'Markdown',
                 'text': message,
             },
@@ -53,9 +52,8 @@ class TelegramNotify(Notify):
         if not self.token:
             logging.error('没有可用的telegram token，无法推送')
             return
-        if not self.chat_id:
-            logging.error('没有可用的chat_id，无法推送')
-            return
+        if not user_id:
+            user_id = self.chat_id
 
         message = f'*{StringUtils.render_text(title_template, **context)}*\r\n'
         message += f'{StringUtils.render_text(body_template, **context)}'
