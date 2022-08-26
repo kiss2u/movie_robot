@@ -33,7 +33,7 @@ class TelegramNotify(Notify):
             '%s/bot%s/sendMessage' % (self.server_url, self.token),
             params={
                 'chat_id': self.chat_id,
-                'parse_mode': 'MarkdownV2',
+                'parse_mode': 'Markdown',
                 'text': message,
             },
             proxies=self.proxy
@@ -59,21 +59,26 @@ class TelegramNotify(Notify):
 
         message = f'*{StringUtils.render_text(title_template, **context)}*\r\n'
         message += f'{StringUtils.render_text(body_template, **context)}'
-
-        if context and context.get('pic_url'):
-            url = '%s/bot%s/sendPhoto' % (self.server_url, user_id)
+        photo = context.get('pic_url')
+        if photo:
+            if photo.endswith('.webp'):
+                photo = photo.replace('.webp', '.jpg')
+        if context and photo:
+            url = '%s/bot%s/sendPhoto' % (self.server_url, self.token)
             data = {
-                'chat_id': self.chat_id,
-                'parse_mode': 'MarkdownV2',
-                'photo': context.get('pic_url'),
-                'caption': message
+                'chat_id': user_id,
+                'parse_mode': 'Markdown',
+                'photo': photo,
+                'caption': message,
+                'protect_content': True
             }
         else:
-            url = '%s/bot%s/sendMessage' % (self.server_url, user_id)
+            url = '%s/bot%s/sendMessage' % (self.server_url, self.token)
             data = {
-                'chat_id': self.chat_id,
-                'parse_mode': 'MarkdownV2',
+                'chat_id': user_id,
+                'parse_mode': 'Markdown',
                 'text': message,
+                'protect_content': True
             }
 
         res = httpx.post(url, params=data, proxies=self.proxy).json()
