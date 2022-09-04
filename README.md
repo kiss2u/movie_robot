@@ -1,10 +1,3 @@
-# 公告
-
-‼️9月1日的重要变化
-* 严格落实一人一Key规则，这种私有化服务不像软件，家里部署一份，是全家人及朋友可用的。以IP衡量一人是目前看来最合理的方式，也就是一个KEY只允许一个IP使用，超出的IP会被踢掉限制使用，被限制的IP无法订阅无法更新，无法启动，无法使用任何核心功能。不会采用封KEY这种极端方式。给亲朋好友公司云端部署的用户要考虑这条规则落地后对你的影响了。在自己家同一个IP，你跑多少个设备目前来说都是合理的，但别想钻空子。
-* 取消永久授权标价，改为60元一年。根据对未来增长用户规模的推算，这个定价的费用刚好足够覆盖我认为未来可能产生的云计算资源使用成本，至于剩余的钱，极限情况应该在我0.5-1个月税后工资的水平，从付出的更新维护时间成本来计算，严重亏损，不用再恶意揣测我利用这项目赚钱。
-* 永久明码标价取消了，但路不完全堵死，推出一项新服务，1688元提供我1小时技术支持，1对1沟通甚至远程服务，内容为mr交付、私人影音或任何nas相关，但只有1小时，同时附赠永久使用激活码一个。这个标价，就是鼓励绝大多数人选择60元年付，1688你是在买我的时间。
-
 # Movie Robot 产品手册
 Telegram Channel: https://t.me/aimovierobot 作者会及时把产品的更新日志，发展动态，发到这个频道。
 
@@ -44,7 +37,7 @@ Telegram Channel: https://t.me/aimovierobot 作者会及时把产品的更新日
   * 全部媒体元数据，和媒体资源，均来自第三方网站
 
 # 使用须知
-**激活码获取方式：通过捐助作者168元为作者的开发以及后续持续更新所付出的时间买单来获得软件永久使用及更新的权利。[点击查看支付宝付款码](https://yee-1254270141.cos.ap-beijing.myqcloud.com/movie_robot/alipay.jpg) 支付后请备注邮箱接收激活码**
+**激活码获取方式：60元/每年 1688作者1小时远程技术指导附赠永久激活码。[点击查看支付宝付款码](https://yee-1254270141.cos.ap-beijing.myqcloud.com/movie_robot/alipay.jpg) 支付后请备注邮箱接收激活码**
 
 找到一个你认识的永久用户朋友，也可以帮你开通1个月免费体验
 
@@ -64,10 +57,3 @@ https://github.com/pofey/movie-robot-frontend
 ### 移动端：
 <img src="https://raw.githubusercontent.com/pofey/movie_robot/main/doc/images/webui-search.jpg" width="300" height="650"/><img src="https://raw.githubusercontent.com/pofey/movie_robot/main/doc/images/webui-downloading-dark.jpg" width="300" height="650"/>
 <img src="https://raw.githubusercontent.com/pofey/movie_robot/main/doc/images/search-ww.jpg" width="300" height="650"/><img src="https://raw.githubusercontent.com/pofey/movie_robot/main/doc/images/webui-downloading.jpg" width="300" height="650"/>
-
-## 当前支持的站点
-几乎所有主流国内PT站点，和RARBG
-
-# 赞赏一下
-<img src="https://yee-1254270141.cos.ap-beijing.myqcloud.com/movie_robot/alipay.jpg" width="325" height="485" alt="赞赏码" style="float: left;"/>
-显示不全点开看。[点击查看支付宝付款码](https://yee-1254270141.cos.ap-beijing.myqcloud.com/movie_robot/alipay.jpg)
