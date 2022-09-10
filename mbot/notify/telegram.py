@@ -13,8 +13,11 @@ class TelegramNotify(Notify):
 
     def __init__(self, args):
         self.token = args.get('token')
-        self.proxy = args.get('proxy')
-        self.chat_id = args.get('chat_id')
+        if args.get('proxy'):
+            self.proxy = args.get('proxy')
+        else:
+            self.proxy = None
+        self.chat_id = args.get('user_id')
         self.server_url = args.get('server_url', 'https://api.telegram.org')
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(5))
@@ -67,16 +70,14 @@ class TelegramNotify(Notify):
                 'chat_id': user_id,
                 'parse_mode': 'Markdown',
                 'photo': photo,
-                'caption': message,
-                'protect_content': True
+                'caption': message
             }
         else:
             url = '%s/bot%s/sendMessage' % (self.server_url, self.token)
             data = {
                 'chat_id': user_id,
                 'parse_mode': 'Markdown',
-                'text': message,
-                'protect_content': True
+                'text': message
             }
 
         res = httpx.post(url, params=data, proxies=self.proxy).json()

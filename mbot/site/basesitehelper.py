@@ -1,8 +1,4 @@
-import datetime
-import random
-import time
 from abc import ABCMeta, abstractmethod
-from functools import wraps
 from typing import List
 
 from random_user_agent.params import SoftwareName
@@ -10,49 +6,6 @@ from random_user_agent.user_agent import UserAgent
 
 from mbot.common.stringutils import StringUtils
 from mbot.torrent.torrentobject import TorrentList, CateLevel1, SiteUserinfo
-
-
-def request_interval(action='default', min_sleep=3, max_sleep=None):
-    def decorate(func):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            imin = min_sleep
-            imax = max_sleep
-            action_pre_request_time = self.ACTION_PRE_REQUEST_TIME
-            req_interval = self.get_request_interval(action)
-            if req_interval:
-                imin = req_interval.get('min')
-                imax = req_interval.get('max')
-            key = '%s:%s:%s' % (self.get_id(), type(self).__name__, action)
-            if key in action_pre_request_time:
-                request_time = action_pre_request_time.get(key)
-            else:
-                request_time = None
-            if request_time is None:
-                res = func(self, *args, **kwargs)
-                action_pre_request_time[key] = datetime.datetime.now()
-                return res
-            during_time = datetime.datetime.now() - request_time
-            if during_time.total_seconds() < imin:
-                if imax:
-                    sleep_secs = random.randint(imin, max_sleep) - during_time.total_seconds()
-                else:
-                    sleep_secs = imin - during_time.total_seconds()
-                time.sleep(sleep_secs)
-                request_time = datetime.datetime.now()
-            else:
-                request_time = datetime.datetime.now()
-            res = func(self, *args, **kwargs)
-            action_pre_request_time[key] = request_time
-            return res
-
-        return wrapper
-
-    return decorate
-
-
-class RateLimitException(Exception):
-    pass
 
 
 class BaseSiteHelper(metaclass=ABCMeta):
@@ -86,9 +39,6 @@ class BaseSiteHelper(metaclass=ABCMeta):
 
     def get_download_content_type(self):
         return self.site_config.get('download', {'method': 'GET'}).get('content_type')
-
-    def get_request_interval(self, action):
-        return self.site_config.get('request_interval', {}).get(action)
 
     def get_download_args(self):
         args = self.site_config.get('download', {'method': 'GET'}).get('args', None)
@@ -164,10 +114,11 @@ class BaseSiteHelper(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def search(self, keyword=None, imdb_id=None, cate_level1_list: list = None, free: bool = False, page: int = None,
-               timeout=None) -> TorrentList:
+    async def search(self, keyword=None, imdb_id=None, cate_level1_list: list = None, free: bool = False,
+                     page: int = None,
+                     timeout=None) -> TorrentList:
         pass
 
     @abstractmethod
-    def download(self, url, filepath):
+    async def download(self, url, filepath):
         pass

@@ -2,9 +2,9 @@ import datetime
 from enum import Enum
 from typing import List
 
-from mbot.common.dictutils import DictUtils
-from mbot.common.jsonmodel import JsonModel
-from mbot.common.osutils import OSUtils
+from mbot.common.numberutils import NumberUtils
+from mbot.common.dictutils import DictWrapper
+from mbot.common.serializable import Serializable
 
 
 class CateLevel1(str, Enum):
@@ -25,7 +25,7 @@ class CateLevel1(str, Enum):
         return None
 
 
-class SiteUserinfo(JsonModel):
+class SiteUserinfo(Serializable):
     uid: int
     username: str
     user_group: str
@@ -37,7 +37,7 @@ class SiteUserinfo(JsonModel):
     vip_group: bool = False
 
 
-class TorrentInfo(JsonModel):
+class TorrentInfo(Serializable):
     # 站点编号
     site_id: str
     # 种子编号
@@ -79,35 +79,36 @@ class TorrentInfo(JsonModel):
 
     @staticmethod
     def build_by_parse_item(site_config, item):
+        item = DictWrapper(item or {})
         t = TorrentInfo()
         t.site_id = site_config.get('id')
-        t.id = DictUtils.get_item_int_value(item, 'id', 0)
-        t.name = DictUtils.get_item_value(item, 'title', '')
-        t.subject = DictUtils.get_item_value(item, 'description', '')
+        t.id = item.get_int('id', 0)
+        t.name = item.get_value('title', '')
+        t.subject = item.get_value('description', '')
         if t.subject:
             t.subject = t.subject.strip()
-        t.free_deadline = DictUtils.get_item_value(item, 'free_deadline', None)
-        t.imdb_id = DictUtils.get_item_value(item, 'imdbid', None)
-        t.upload_count = DictUtils.get_item_int_value(item, 'seeders', 0)
-        t.downloading_count = DictUtils.get_item_int_value(item, 'leechers', 0)
-        t.download_count = DictUtils.get_item_int_value(item, 'grabs', 0)
-        t.download_url = DictUtils.get_item_value(item, 'download', None)
+        t.free_deadline = item.get('free_deadline')
+        t.imdb_id = item.get('imdbid')
+        t.upload_count = item.get_int('seeders', 0)
+        t.downloading_count = item.get_int('leechers', 0)
+        t.download_count = item.get_int('grabs', 0)
+        t.download_url = item.get('download')
         if t.download_url and not t.download_url.startswith('http'):
             t.download_url = site_config.get('domain') + t.download_url
-        t.publish_date = DictUtils.get_item_value(item, 'date', datetime.datetime.now())
-        t.cate_id = str(DictUtils.get_item_value(item, 'category', None))
+        t.publish_date = item.get_value('date', datetime.datetime.now())
+        t.cate_id = str(item.get('category')) if item.get('category') else None
         for c in site_config.get('category_mappings'):
             if c.get('id') == t.cate_id:
                 t.cate_level1 = CateLevel1.get_type(c.get('cate_level1'))
-        t.details_url = DictUtils.get_item_value(item, 'details', None)
+        t.details_url = item.get('details')
         if t.details_url:
             t.details_url = site_config.get('domain') + t.details_url
-        t.download_volume_factor = float(DictUtils.get_item_value(item, 'downloadvolumefactor', 1))
-        t.upload_volume_factor = DictUtils.get_item_value(item, 'uploadvolumefactor', 1)
-        t.size_mb = OSUtils.trans_size_str_to_mb(str(DictUtils.get_item_value(item, 'size', 0)))
-        t.poster_url = DictUtils.get_item_value(item, 'poster', None)
-        t.minimum_ratio = DictUtils.get_item_float_value(item, 'minimumratio', 0.0)
-        t.minimum_seed_time = DictUtils.get_item_int_value(item, 'minimumseedtime', 0)
+        t.download_volume_factor = float(item.get_value('downloadvolumefactor', 1))
+        t.upload_volume_factor = item.get_value('uploadvolumefactor', 1)
+        t.size_mb = NumberUtils.trans_size_str_to_mb(str(item.get_value('size', 0)))
+        t.poster_url = item.get('poster')
+        t.minimum_ratio = item.get_float('minimumratio', 0.0)
+        t.minimum_seed_time = item.get_int('minimumseedtime', 0)
         if t.poster_url:
             if t.poster_url.startswith("./"):
                 t.poster_url = site_config.get('domain') + t.poster_url[2:]
@@ -119,7 +120,7 @@ class TorrentInfo(JsonModel):
 TorrentList = List[TorrentInfo]
 
 
-class TVSeries(JsonModel):
+class TVSeries(Serializable):
     season_start: int = None
     season_end: int = None
     season_full_index: List[int] = []

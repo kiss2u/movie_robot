@@ -1,7 +1,11 @@
+import logging
 from enum import Enum
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ErrCode(Enum):
+    """系统内错误码定义，有助于给出错误码表，方便问题排查"""
     LOGIN_ERROR = (400001, '登录错误，请检查登录状态是否已经过期，尝试重新登录')
     TMDB_ERROR = (400002, 'TMDB访问异常')
     DOUBAN_ERROR = (400003, '豆瓣访问异常')
@@ -17,3 +21,12 @@ class ErrCode(Enum):
 
     def message(self, args=None):
         return '错误码：%s 错误消息：%s' % (self.value[0], self.value[1] % (args) if args else self.value[1])
+
+
+def print_error(err_code: ErrCode, message_args=None, logger=None):
+    if not err_code:
+        return
+    if logger:
+        logger.error(err_code.message(message_args))
+    else:
+        _LOGGER.error(err_code.message(message_args))

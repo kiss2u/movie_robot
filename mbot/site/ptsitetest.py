@@ -19,14 +19,14 @@ class PTSiteTest:
         self.helper = SiteHelper(self.config, cookie_str=self.cookie_str)
         print('已经初始化站点配置 id: %s name: %s' % (self.helper.get_id(), self.helper.get_name()))
 
-    def start_test(self):
+    async def start_test(self):
         print('开始检查站点登陆有效性')
-        self.test_login()
+        await self.test_login()
         print('登陆成功')
         print('开始验证用户信息详细字段数据')
-        self.test_get_userinfo()
+        await self.test_get_userinfo()
         print('用户信息详细字段数据验证成功')
-        self.test_search()
+        await self.test_search()
         print('所有测试全部通过！')
 
     @staticmethod
@@ -35,8 +35,9 @@ class PTSiteTest:
             if key not in config:
                 raise RuntimeError('缺少必要的配置项：%s' % key)
 
-    def test_login(self):
-        test = self.helper.parser.test_login(self.helper.get_userinfo_page_text())
+    async def test_login(self):
+        page_text = await self.helper.get_userinfo_page_text()
+        test = self.helper.parser.test_login(page_text)
         if test:
             print('站点登陆成功')
         else:
@@ -78,8 +79,8 @@ class PTSiteTest:
         if not isinstance(value, bool):
             raise RuntimeError('%s类型不是bool：%s' % (name, value))
 
-    def test_get_userinfo(self):
-        userinfo = self.helper.get_userinfo()
+    async def test_get_userinfo(self):
+        userinfo = await self.helper.get_userinfo()
         if not userinfo:
             raise RuntimeError('无法获取用户信息')
         self.check_int('uid', userinfo.uid, not_zero=True)
@@ -141,29 +142,29 @@ class PTSiteTest:
         for t in torrent_list:
             self.test_torrent(t)
 
-    def test_download(self, torrent):
+    async def test_download(self, torrent):
         import tempfile
         filepath = os.path.join(tempfile.gettempdir(), "%s.torrent" % time.time())
-        self.helper.download(torrent.download_url, filepath)
+        await self.helper.download(torrent.download_url, filepath)
         if not os.path.exists(filepath) or os.path.getsize(filepath) <= 0:
             raise RuntimeError('下载文件失败，下载链接：%s' % torrent.download_url)
         os.remove(filepath)
 
-    def test_search(self):
+    async def test_search(self):
         print('开始无参数搜索测试（获取种子列表页）')
-        r = self.helper.search()
+        r = await self.helper.search()
         self.check_list(r, '无参数列表页')
         self.test_torrent_list(r)
         print('无参数列表页搜索测试通过')
         print('开始常规电影搜索测试')
-        r = self.helper.search(keyword='复仇者联盟', cate_level1_list=[CateLevel1.Movie])
+        r = await self.helper.search(keyword='复仇者联盟', cate_level1_list=[CateLevel1.Movie])
         self.check_list(r, '复仇者联盟')
         self.test_torrent_list(r)
         print('常规电影搜索测试通过')
         print('开始常规剧集搜索测试')
-        r = self.helper.search(keyword='绝命毒师', cate_level1_list=[CateLevel1.TV])
+        r = await self.helper.search(keyword='绝命毒师', cate_level1_list=[CateLevel1.TV])
         self.check_list(r, '绝命毒师')
         self.test_torrent_list(r)
         print('开始测试下载种子')
-        self.test_download(r[0])
+        await self.test_download(r[0])
         print('常规剧集搜索测试通过')

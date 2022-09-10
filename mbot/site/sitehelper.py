@@ -1,23 +1,27 @@
+import asyncio
 import logging
 import random
 import re
-import time
 from http.cookies import SimpleCookie
 
+import aiofiles
 import httpx
 from httpx import Timeout
 from jinja2 import Template
+from pyrate_limiter import Limiter, RequestRate, Duration
 from tenacity import retry, stop_after_delay, wait_exponential
 
-from mbot.common.errcode import ErrCode
-from mbot.common.logutils import print_error
-from mbot.common.osutils import OSUtils
-from mbot.site.basesitehelper import BaseSiteHelper, request_interval, RateLimitException
+from mbot.common.errcode import ErrCode, print_error
+from mbot.common.numberutils import NumberUtils
+from mbot.exceptions import RateLimitException
+from mbot.site.basesitehelper import BaseSiteHelper
 from mbot.site.resultfilters import result_filters
 from mbot.site.searchprehandler import search_pre_handlers
 from mbot.site.siteexceptions import LoginRequired, RequestOverloadException
 from mbot.site.siteparser import SiteParser
 from mbot.torrent.torrentobject import TorrentList, SiteUserinfo
+
+download_limiter = Limiter(RequestRate(1, 15 * Duration.SECOND))
 
 
 class SiteHelper(BaseSiteHelper):
@@ -113,15 +117,19 @@ class SiteHelper(BaseSiteHelper):
             for k in r.cookies:
                 self.cookies[k] = r.cookies[k]
 
-    def handle_cf_check(self, res):
+    async def handle_cf_check(self, res):
         if res.text.find('data-cf-settings') != -1 and res.text.find('rocket-loader') != -1:
             match_js_var = re.search(r'window.location=(.+);', res.text)
             if match_js_var:
                 check_uri = eval(match_js_var.group(1))
-                with httpx.Client(headers=self.headers, cookies=self.cookies, http2=False,
-                                  follow_redirects=True, timeout=Timeout(timeout=self.request_timeout),
-                                  proxies=self.proxies) as client:
-                    r = client.get(self.get_domain() + check_uri)
+                async with httpx.AsyncClient(
+                        headers=self.headers,
+                        cookies=self.cookies,
+                        follow_redirects=True,
+                        timeout=Timeout(timeout=self.request_timeout),
+                        proxies=self.proxies
+                ) as client:
+                    r = await client.get(self.get_domain() + check_uri)
                     self.__update_cookie__(r)
                 return self.__get_response_text__(r)
         elif res.status_code == 503 and res.text.find('<title>Just a moment...</title>') != -1:
@@ -132,13 +140,18 @@ class SiteHelper(BaseSiteHelper):
         return self.__get_response_text__(res)
 
     @retry(stop=stop_after_delay(600), wait=wait_exponential(multiplier=1, min=30, max=120))
-    def get_userinfo_page_text(self):
+    async def get_userinfo_page_text(self):
         url = self.site_config.get('userinfo').get('path')
-        with httpx.Client(headers=self.headers, cookies=self.cookies, http2=False,
-                          timeout=Timeout(timeout=self.request_timeout), proxies=self.proxies,
-                          follow_redirects=True) as client:
-            r = client.get(url)
-            text = self.handle_cf_check(r)
+        async with httpx.AsyncClient(
+                headers=self.headers,
+                cookies=self.cookies,
+                http2=False,
+                timeout=Timeout(timeout=self.request_timeout),
+                proxies=self.proxies,
+                follow_redirects=True
+        ) as client:
+            r = await client.get(url)
+            text = await self.handle_cf_check(r)
             return text
 
     @staticmethod
@@ -147,8 +160,8 @@ class SiteHelper(BaseSiteHelper):
         user.uid = int(result['uid'])
         user.username = result['username']
         user.user_group = result['user_group']
-        user.uploaded = OSUtils.trans_size_str_to_mb(str(result['uploaded']))
-        user.downloaded = OSUtils.trans_size_str_to_mb(str(result['downloaded']))
+        user.uploaded = NumberUtils.trans_size_str_to_mb(str(result['uploaded']))
+        user.downloaded = NumberUtils.trans_size_str_to_mb(str(result['downloaded']))
         try:
             user.seeding = int(result['seeding'])
         except Exception as e:
@@ -171,18 +184,19 @@ class SiteHelper(BaseSiteHelper):
         user.vip_group = result['vip_group']
         return user
 
-    def get_userinfo(self, refresh=False) -> SiteUserinfo:
+    async def get_userinfo(self, refresh=False) -> SiteUserinfo:
         if not refresh and self.last_search_text:
             # 用上次搜索结果页内容做解析
             text = self.last_search_text
         else:
-            text = self.get_userinfo_page_text()
+            text = await self.get_userinfo_page_text()
         res = self.parser.parse_userinfo(text)
         self.userinfo = res
         return self.trans_to_userinfo(res)
 
-    def search(self, keyword=None, imdb_id=None, cate_level1_list: list = None, free: bool = False, page: int = None,
-               timeout=None) -> TorrentList:
+    async def search(self, keyword=None, imdb_id=None, cate_level1_list: list = None, free: bool = False,
+                     page: int = None,
+                     timeout=None) -> TorrentList:
         if not self.search_paths:
             return []
         input_cate2_ids = set(self.__get_cate_level2_ids__(cate_level1_list))
@@ -230,15 +244,20 @@ class SiteHelper(BaseSiteHelper):
             qs = self.__render_querystring__(query)
             headers = self.headers
             headers['Referer'] = f'{self.get_domain()}{uri}'
-            with httpx.Client(headers=headers, cookies=self.cookies, http2=False,
-                              timeout=Timeout(timeout=timeout), proxies=self.proxies, follow_redirects=True) as client:
+            async with httpx.AsyncClient(
+                    headers=headers,
+                    cookies=self.cookies,
+                    timeout=Timeout(timeout=timeout),
+                    proxies=self.proxies,
+                    follow_redirects=True
+            ) as client:
                 if p.get('method') == 'get':
                     url = f'{self.get_domain()}{uri}?{qs}'
-                    r = client.get(url)
+                    r = await client.get(url)
                 else:
                     url = f'{self.get_domain()}{uri}'
-                    r = client.post(url, data=qs)
-                text = self.handle_cf_check(r)
+                    r = await client.post(url, data=qs)
+                text = await self.handle_cf_check(r)
                 if not text:
                     continue
                 if text.find('负载过高，120秒后自动刷新') != -1:
@@ -249,13 +268,14 @@ class SiteHelper(BaseSiteHelper):
                 torrents = self.parser.parse_torrents(text, context={'userinfo': self.userinfo})
                 if self.site_config.get('search').get('result_filter'):
                     client.cookies = self.cookies
-                    r = result_filters[self.site_config.get('search').get('result_filter')](client, text, torrents)
+                    r = await result_filters[self.site_config.get('search').get('result_filter')](client, text,
+                                                                                                  torrents)
                     self.__update_cookie__(r)
                 if torrents:
                     search_result += torrents
             if i + 1 < len(paths):
                 # 多页面搜索随机延迟
-                time.sleep(random.randint(3, 5))
+                await asyncio.sleep(random.randint(3, 5))
         return search_result
 
     def __check_limit__(self, text, err_msg):
@@ -264,39 +284,43 @@ class SiteHelper(BaseSiteHelper):
         if text.find('请求次数过多') != -1:
             raise RateLimitException(f'{self.get_name()}{err_msg}')
 
-    @request_interval(action='download', min_sleep=10, max_sleep=30)
     @retry(stop=stop_after_delay(300), wait=wait_exponential(multiplier=1, min=30, max=120), reraise=True)
-    def download(self, url, filepath):
-        with httpx.Client(headers=self.headers, cookies=self.cookies, http2=False,
-                          timeout=Timeout(timeout=self.download_timeout), proxies=self.proxies,
-                          follow_redirects=True) as client:
-            if self.get_download_method() == 'POST':
-                if self.get_download_content_type():
-                    headers = self.headers
-                    headers['content-type'] = self.get_download_content_type()
-                    r = client.post(url, data=self.get_download_args(), headers=headers)
-                else:
-                    r = client.post(url, data=self.get_download_args())
-            else:
-                r = client.get(url)
-            if r.status_code == 404:
-                print_error(ErrCode.TORRENT_NOT_FOUND_ERROR, message_args=(url))
-                return
-            if 'content-type' in r.headers and r.headers['content-type'].find('text/html') != -1:
-                if r.text.find(
-                        '下载提示') != -1 or r.text.find('下載輔助說明') != -1:
-                    match_id = re.search(r'name="id"\s+value="(\d+)"', r.text)
-                    if match_id:
-                        r = client.post(f'{self.get_domain()}downloadnotice.php',
-                                        data={'id': match_id.group(1), 'type': 'ratio'})
+    async def download(self, url, filepath):
+        async with download_limiter.ratelimit(self.get_id(), delay=True):
+            async with httpx.AsyncClient(
+                    headers=self.headers,
+                    cookies=self.cookies,
+                    timeout=Timeout(timeout=self.download_timeout),
+                    proxies=self.proxies,
+                    follow_redirects=True
+            ) as client:
+                if self.get_download_method() == 'POST':
+                    if self.get_download_content_type():
+                        headers = self.headers
+                        headers['content-type'] = self.get_download_content_type()
+                        r = await client.post(url, data=self.get_download_args(), headers=headers)
                     else:
-                        raise RuntimeError('%s下载种子需要页面确认，先手动打开浏览器下载一次，并重新换Cookie！' % self.get_name())
+                        r = await client.post(url, data=self.get_download_args())
                 else:
-                    self.__check_limit__(r.text, '下载频率过高：%s' % url)
-                    logging.error(f'下载种子错误：%s' % url)
-                    logging.error('%s' % r.text)
-                    raise RuntimeError(f'{self.get_name()}下载出错')
-            if r.status_code == 404:
-                return
-            with open(filepath, 'wb') as file:
-                file.write(r.content)
+                    r = await client.get(url)
+                if r.status_code == 404:
+                    print_error(ErrCode.TORRENT_NOT_FOUND_ERROR, message_args=(url))
+                    return
+                if 'content-type' in r.headers and r.headers['content-type'].find('text/html') != -1:
+                    if r.text.find(
+                            '下载提示') != -1 or r.text.find('下載輔助說明') != -1:
+                        match_id = re.search(r'name="id"\s+value="(\d+)"', r.text)
+                        if match_id:
+                            r = await client.post(f'{self.get_domain()}downloadnotice.php',
+                                                  data={'id': match_id.group(1), 'type': 'ratio'})
+                        else:
+                            raise RuntimeError('%s下载种子需要页面确认，先手动打开浏览器下载一次，并重新换Cookie！' % self.get_name())
+                    else:
+                        self.__check_limit__(r.text, '下载频率过高：%s' % url)
+                        logging.error(f'下载种子错误：%s' % url)
+                        logging.error('%s' % r.text)
+                        raise RuntimeError(f'{self.get_name()}下载出错')
+                if r.status_code == 404:
+                    return
+                async with aiofiles.open(filepath, 'wb') as file:
+                    await file.write(r.content)

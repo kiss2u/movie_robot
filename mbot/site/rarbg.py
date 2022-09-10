@@ -8,11 +8,16 @@ import httpx
 from cacheout import Cache
 from httpx import Timeout
 from magnet2torrent import Magnet2Torrent
+from pyrate_limiter import Limiter, RequestRate, Duration
 from tenacity import retry, wait_fixed, stop_after_attempt, stop_after_delay, wait_exponential
-from mbot.site.basesitehelper import BaseSiteHelper, request_interval, RateLimitException
+
+from mbot.exceptions import RateLimitException
+from mbot.site.basesitehelper import BaseSiteHelper
 from mbot.torrent.torrentobject import TorrentList, TorrentInfo, CateLevel1, SiteUserinfo
 
 token_cache = Cache(maxsize=32, ttl=800, default=None)
+
+search_limter = Limiter(RequestRate(1, 3 * Duration.SECOND))
 
 
 class Rarbg(BaseSiteHelper):
@@ -28,7 +33,6 @@ class Rarbg(BaseSiteHelper):
         else:
             self.proxies = None
 
-    @request_interval(action='default', min_sleep=3)
     def __do_get__(self, url, params=None, timeout=None):
         if not timeout:
             timeout = 10
@@ -40,8 +44,9 @@ class Rarbg(BaseSiteHelper):
         headers = {
             'user-agent': self.user_agent_rotator.get_random_user_agent()
         }
-        r = httpx.get(url, params=params, headers=headers, timeout=Timeout(timeout), proxies=self.proxies)
-        return r
+        with search_limter.ratelimit('rarbg', delay=True):
+            r = httpx.get(url, params=params, headers=headers, timeout=Timeout(timeout), proxies=self.proxies)
+            return r
 
     @retry(wait=wait_fixed(3), stop=stop_after_attempt(3), reraise=True)
     def __get_token__(self):

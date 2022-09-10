@@ -5,7 +5,7 @@ import re
 from mbot.torrent.torrentobject import TorrentList
 
 
-def hdchina_free_ajax_filter(client, search_html_text, torrents: TorrentList):
+async def hdchina_free_ajax_filter(client, search_html_text, torrents: TorrentList):
     mcsrf = re.search(r'<meta name="x-csrf" content="([^"]+)"/>', search_html_text)
     if mcsrf:
         csrf = mcsrf.group(1)
@@ -15,7 +15,7 @@ def hdchina_free_ajax_filter(client, search_html_text, torrents: TorrentList):
     for t in torrents:
         post_str += f'ids%5B%5D={t.id}&'
     post_str += 'csrf=' + csrf
-    free_res = client.post(
+    free_res = await client.post(
         url='https://hdchina.org/ajax_promotion.php',
         data=post_str,
         headers={

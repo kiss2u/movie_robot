@@ -1,7 +1,5 @@
-import datetime
 import re
 
-import cn2an
 import emoji
 import math
 from jinja2 import Template
@@ -10,38 +8,24 @@ from pypinyin import Style, lazy_pinyin
 
 
 class StringUtils:
-    @staticmethod
-    def str_to_date(strdate, pattern: str) -> datetime:
-        if strdate is None or strdate == '':
-            return None
-        return datetime.datetime.strptime(strdate, pattern)
-
-    @staticmethod
-    def str_to_year(strdate, pattern: str) -> datetime:
-        if strdate is None or strdate == '':
-            return None
-        try:
-            date = datetime.datetime.strptime(strdate, pattern)
-            return date.year
-        except Exception as e:
-            return None
+    """字符串操作工具"""
 
     @staticmethod
     def trim_emoji(text):
+        """
+        去掉字符串中的emoji表情
+        :param text:
+        :return:
+        """
         return emoji.demojize(text)
 
     @staticmethod
-    def trans_number(numstr: str):
-        try:
-            if numstr.isdigit():
-                return int(numstr)
-            else:
-                return cn2an.cn2an(numstr)
-        except Exception as e:
-            return
-
-    @staticmethod
     def noisestr(text):
+        """
+        把一个字符串中间替换成*号干扰字符
+        :param text:
+        :return:
+        """
         if text is None or len(text) == 0:
             return text
         if len(text) > 2:
@@ -59,15 +43,26 @@ class StringUtils:
         return text.replace(text[s:e], ''.join(n))
 
     @staticmethod
-    def trimhtml(htmlstr):
+    def trim_html(text):
+        """
+        去掉字符串中的html标签
+        :param text:
+        :return:
+        """
         try:
-            html = etree.HTML(text=htmlstr)
+            html = etree.HTML(text=text)
             return html.xpath('string(.)')
         except Exception as e:
-            return htmlstr
+            return text
 
     @staticmethod
     def replace_var(text, context):
+        """
+        替换字符串中的简单占位变量 格式 {var name}
+        :param text:
+        :param context:
+        :return:
+        """
         for m in re.findall(r'\$\{([^\}]+)\}', text):
             var_name = m
             text = text.replace('${%s}' % var_name,
@@ -75,47 +70,39 @@ class StringUtils:
         return text
 
     @staticmethod
-    def dict_str_is_empty(obj: dict, key: str):
-        if obj is None or len(obj) == 0:
-            return True
-        if key is None or len(key) == 0:
-            return True
-        if key not in obj:
-            return True
-        if obj[key] is None:
-            return True
-        if len(obj[key]) == 0:
-            return True
-        return False
-
-    @staticmethod
-    def to_number(text):
-        if text is None:
-            return None
-        if text.isdigit():
-            return int(text)
-        else:
-            try:
-                return cn2an.cn2an(text)
-            except ValueError as e:
-                return None
-
-    @staticmethod
     def render_text(text, **context):
+        """
+        把模版语法渲染成最终字符串
+        :param text:
+        :param context:
+        :return:
+        """
+        if not context or len(context) == 0:
+            return text
         template = Template(text)
         return template.render(**context)
 
     @staticmethod
-    def is_en_name(text):
+    def is_en_text(text):
+        """
+        是否为一个全英文字符串
+        :param text:
+        :return:
+        """
         if re.match(r'[a-zA-Z\W_\d]+', str(text)):
             return True
         else:
             return False
 
     @staticmethod
-    def get_first_letter(text):
+    def get_chinese_first_letter(text):
+        """
+        获取中文拼音首字母组合
+        :param text:
+        :return:
+        """
         if not text:
             return text
-        if not StringUtils.is_en_name(text):
+        if not StringUtils.is_en_text(text):
             return ''.join(lazy_pinyin(text, style=Style.FIRST_LETTER))
         return text

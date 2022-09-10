@@ -6,8 +6,8 @@ import httpx
 from tenacity import wait_fixed, stop_after_attempt, retry
 
 from mbot.common.stringutils import StringUtils
-from mbot.core import remote_api
 from mbot.notify.notify import Notify
+from mbot.register import RemoteApi
 
 
 class QywechatNotify(Notify):
@@ -27,7 +27,7 @@ class QywechatNotify(Notify):
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(5))
     def __do_send_message__(self, access_token, params):
         if self.use_server_proxy:
-            return remote_api.send_qywx_message(access_token, params)
+            return RemoteApi.send_qywx_message(access_token, params)
         else:
             url = f'{self.server_url}/cgi-bin/message/send?access_token=' + access_token
             res = httpx.post(url, data=params)

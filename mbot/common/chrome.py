@@ -10,6 +10,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 
 class Chrome:
+    """chrome无头浏览器工具"""
     driver = None
 
     def __init__(self, executable_path=None):
