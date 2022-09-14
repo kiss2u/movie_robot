@@ -13,5 +13,13 @@ class IPLimitException(MovieBotException):
 class MediaServerError(MovieBotException):
     pass
 
+
 class RateLimitException(MovieBotException):
+    pass
+
+
+class OCRError(MovieBotException):
+    pass
+
+class UnsupportedOperationException(MovieBotException):
     pass

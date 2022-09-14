@@ -36,8 +36,7 @@ class PTSiteTest:
                 raise RuntimeError('缺少必要的配置项：%s' % key)
 
     async def test_login(self):
-        page_text = await self.helper.get_userinfo_page_text()
-        test = self.helper.parser.test_login(page_text)
+        test = self.helper.parser.test_login(await self.helper.get_userinfo_page_text())
         if test:
             print('站点登陆成功')
         else:

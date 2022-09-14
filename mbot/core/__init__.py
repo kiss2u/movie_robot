@@ -1,13 +1,14 @@
+from abc import ABCMeta, abstractmethod
+
 from mbot.core.config import Config
 import logging
-from typing import Any, List, Dict, Callable
+from typing import Any, List, Dict
 
 import voluptuous as vol
 
 from mbot.common.dictutils import ReadOnlyDict
 from mbot.core.eventbus import EventBus
 from mbot.core.events import EventListener
-from mbot.core.task import Task
 from mbot.exceptions import MovieBotException
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,13 +28,22 @@ class MovieBot:
         self.plugins: Dict[str, Plugin] = dict()
 
 
-class PluginContext:
+class InitializingPlugin(metaclass=ABCMeta):
+    @abstractmethod
+    def after_properties_set(self):
+        pass
+
+
+class InitializingPlugin(metaclass=ABCMeta):
+    @abstractmethod
+    def after_properties_set(self):
+        pass
+
+
+class PluginContext(metaclass=ABCMeta):
     """插件上下文信息，包含一些实现插件执行前后一些关键对象，继承此对象，将自动设置值"""
 
-    def __init__(self):
-        self.mbot: MovieBot = None
-
-    def set_mbot(self, mbot: MovieBot):
+    def __init__(self, mbot: MovieBot):
         self.mbot: MovieBot = mbot
 
 
@@ -70,15 +80,11 @@ class Plugin:
     def __init__(
             self,
             module_name: str,
-            manifest: PluginManifest,
-            listeners: List[EventListener],
-            tasks: List[Task]
+            manifest: PluginManifest
     ):
         # 插件名称
         self.module_name: str = module_name
         self.manifest: PluginManifest = manifest
-        self.listeners: List[EventListener] = listeners
-        self.tasks: List[Task] = tasks
 
 
 class Service:

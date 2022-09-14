@@ -48,5 +48,7 @@ iso639-lang
 PyMySQL
 ffmpeg-python
 aiofiles
+aiohttp
 voluptuous
 pyrate-limiter
+ddddocr

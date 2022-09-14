@@ -30,9 +30,9 @@ class NotifyListener(EventListener, PluginContext):
         self.mbot.services.call(
             ServiceConst.notify.namespace,
             ServiceConst.notify.send_app_message_by_template_name,
-            uid=uid,
+            uid=int(uid),
             template_name=template_name,
-            context=context
+            context=dict(context)
         )
 
     def notify_download_completed(self, data):

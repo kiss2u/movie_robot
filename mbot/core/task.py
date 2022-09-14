@@ -5,11 +5,15 @@
 import datetime
 import logging
 from abc import ABCMeta, abstractmethod
+from enum import Enum
 from typing import List, Dict
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from flask_apscheduler import APScheduler
+
+from mbot.core import MovieBot, PluginContext, InitializingPlugin
+from mbot.core.pluginloader import new_plugin_instance
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,6 +82,17 @@ def get_trigger(expression):
     return CronTrigger(minute=vals[0], hour=vals[1], day=vals[2], month=vals[3], day_of_week=vals[4])
 
 
+class TaskStatus(int, Enum):
+    Ready = 1
+    Running = 2
+    Stop = 3
+    Finished = 4
+
+
+class TaskType(str, Enum):
+    download_subtitle = '下载字幕任务'
+
+
 class Task(metaclass=ABCMeta):
     """任务实现，可以被设置为定时执行的任务"""
 
@@ -102,9 +117,13 @@ class TaskMeta:
 class _TaskManager:
     """任务管理类，维护管理系统内所有注册任务的元数据，并利用apscheduler实现任务调度"""
 
-    def __init__(self):
+    def __init__(self, mbot: MovieBot = None):
+        self.mbot = mbot
         self._scheduler = APScheduler(BackgroundScheduler(timezone="Asia/Shanghai"))
         self._tasks: Dict[str, TaskMeta] = dict()
+
+    def init_app(self, mbot: MovieBot):
+        self.mbot = mbot
 
     def register(self, name, desc, cron_expression=None, jitter=None, minutes=None, seconds=None):
         """
@@ -121,7 +140,7 @@ class _TaskManager:
         def decorator(t):
             if name in self._tasks:
                 return t
-            task = t()
+            task = new_plugin_instance(t, self.mbot)
             if not cron_expression and not minutes and not seconds:
                 _LOGGER.error(f'任务没有运行频率设置: {name}({desc})')
                 return t

@@ -247,7 +247,7 @@ class SiteHelper(BaseSiteHelper):
             async with httpx.AsyncClient(
                     headers=headers,
                     cookies=self.cookies,
-                    timeout=Timeout(timeout=timeout),
+                    timeout=Timeout(timeout, connect=60, read=60),
                     proxies=self.proxies,
                     follow_redirects=True
             ) as client:

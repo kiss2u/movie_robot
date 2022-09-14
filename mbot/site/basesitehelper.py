@@ -110,7 +110,7 @@ class BaseSiteHelper(metaclass=ABCMeta):
         return list(filter(None, new_ids))
 
     @abstractmethod
-    def get_userinfo(self, refresh=False) -> SiteUserinfo:
+    async def get_userinfo(self, refresh=False) -> SiteUserinfo:
         pass
 
     @abstractmethod

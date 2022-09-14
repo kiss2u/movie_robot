@@ -70,7 +70,7 @@ class Rarbg(BaseSiteHelper):
 
         asyncio.run(fetch_that_torrent())
 
-    def get_userinfo(self, refresh=False) -> SiteUserinfo:
+    async def get_userinfo(self, refresh=False) -> SiteUserinfo:
         user = SiteUserinfo()
         user.username = 'rarbg'
         user.user_group = 'rarbg'

@@ -59,3 +59,12 @@ class ServiceConst:
                 vol.Optional('context', default={}): dict
             }
         )
+
+    class ocr(StrValueEnum):
+        namespace = 'ocr'
+        get_image_text = 'get_image_text'
+        __get_image_text_schema__: vol.Schema = vol.Schema(
+            {
+                vol.Required('image'): vol.All()
+            }
+        )

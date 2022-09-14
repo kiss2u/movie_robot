@@ -38,5 +38,5 @@ class HDChinaHandler:
 hdchina_handler = HDChinaHandler
 
 search_pre_handlers = {
-    'hdchina_freesession_check_handler': hdchina_handler
+    # 'hdchina_freesession_check_handler': hdchina_handler
 }

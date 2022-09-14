@@ -1,7 +1,10 @@
 import os.path
+import typing
 from typing import Any
 
 import yaml
+
+from mbot.exceptions import UnsupportedOperationException
 
 """默认配置的文件名称"""
 BASE_CONFIG_FILENAME = 'base_config.yml'
@@ -200,6 +203,78 @@ class ConfigValues(dict):
             yaml.dump(self._to_dict(self.copy()), f, default_style=False, encoding='utf-8', allow_unicode=True)
 
 
+class SiteConfig(ConfigValues):
+    def __init__(self, config_filepath: str):
+        self._ext_data: typing.Dict[str, typing.Any] = dict()
+        self.config_filepath = config_filepath
+        with open(config_filepath, 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+            user_config = yaml.safe_load(''.join(lines))
+            self._parse_ext_data(lines)
+        super().__init__(user_config)
+
+    @staticmethod
+    def _parse_ext_data_var(l):
+        arr = l.split(' ')
+        idx = arr[1].index('=')
+        if idx == -1:
+            # err var
+            return
+        key = arr[1][0:idx]
+        value = arr[1][idx + 1:]
+        return {key: value}
+
+    @staticmethod
+    def _line_is_ext_data(l):
+        return l.startswith('#!DATA')
+
+    def _parse_ext_data(self, lines: typing.List[str]):
+        if not lines:
+            return
+        for l in lines:
+            l = l.strip()
+            if not self._line_is_ext_data(l):
+                continue
+            var = self._parse_ext_data_var(l)
+            if not var:
+                continue
+            self._ext_data.update(var)
+
+    def ext_data_to_text(self):
+        if not self._ext_data and len(self._ext_data.keys()):
+            return
+        text = ''
+        for key in self._ext_data:
+            text += f'#!DATA {key}={self._ext_data[key]}\n'
+        return text
+
+    def get_ext_data(self, key: str):
+        return self._ext_data.get(key)
+
+    def set_ext_data(self, key: str, value: str, update_file=False):
+        with open(self.config_filepath, 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+        update = False
+        for i, l in enumerate(lines):
+            if not self._line_is_ext_data(l.strip()):
+                continue
+            var = self._parse_ext_data_var(l.strip())
+            if not var or key not in var:
+                continue
+            lines[i] = f'#!DATA {key}={value}\n'
+            update = True
+            break
+        if update_file:
+            if not update:
+                lines.insert(0, f'#!DATA {key}={value}\n')
+            with open(self.config_filepath, 'w', encoding='utf-8') as file:
+                file.writelines(lines)
+        self._ext_data.update({key: value})
+
+    def save(self):
+        raise UnsupportedOperationException('站点配置文件不支持直接修改')
+
+
 def merge_dict(a, b):
     """
     合并两个dict，只做一级合并，用于补充配置文件新增的变化
@@ -225,12 +300,14 @@ class Config:
         self.work_dir = None
         # 配置文件目录
         self.config_dir = None
+        self.site_config_dir = None
         # 插件目录
         self.plugin_dir = None
         # 基础配置文件对象
         self.base: ConfigValues = None
         # 通知模版配置文件对象
         self.notify_templates: ConfigValues = None
+        self.sites: typing.Dict[str, SiteConfig] = dict()
 
     def load_config(self, config_dir):
         """
@@ -261,3 +338,12 @@ class Config:
         self.notify_templates = ConfigValues(notify_templates, notify_tmpl_filepath)
         if merge_tmpl:
             self.notify_templates.save()
+
+    def load_site_config(self, site_config_dir: str):
+        self.site_config_dir = site_config_dir
+        for path, dir_list, file_list in os.walk(site_config_dir):
+            for file_name in file_list:
+                if os.path.splitext(file_name)[1] == '.yml':
+                    filepath = os.path.join(site_config_dir, file_name)
+                    site_config = SiteConfig(filepath)
+                    self.sites.update({site_config.get('id'): site_config})

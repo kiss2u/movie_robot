@@ -9,9 +9,8 @@ import os.path
 from typing import List
 
 from mbot.common.typeutils import TypeUtils
-from mbot.core import MovieBot, PluginManifest, Plugin, PluginContext
+from mbot.core import MovieBot, PluginManifest, Plugin, PluginContext, InitializingPlugin
 from mbot.core.events import EventListener
-from mbot.core.task import Task
 from mbot.exceptions import MovieBotException
 
 MANIFEST_FILENAME = 'manifest.json'
@@ -24,6 +23,23 @@ class ManifestErrorException(MovieBotException):
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def new_plugin_instance(cls, mbot: MovieBot):
+    """
+    构造一个对象，并设置好上下文信息
+    :param cls:
+    :return:
+    """
+    if not cls:
+        return
+    if PluginContext in cls.__bases__:
+        obj = cls(mbot=mbot)
+    else:
+        obj = cls()
+    if InitializingPlugin in cls.__bases__:
+        obj.after_properties_set()
+    return obj
 
 
 class PluginLoader:
@@ -89,19 +105,6 @@ class PluginLoader:
             _LOGGER.error(f'加载类失败：{cls_path}', exc_info=True)
             return
 
-    def new_instance_with_context(self, cls):
-        """
-        构造一个对象，并设置好上下文信息
-        :param cls:
-        :return:
-        """
-        if not cls:
-            return
-        obj = cls()
-        if isinstance(obj, PluginContext):
-            obj.set_mbot(self.mbot)
-        return obj
-
     def import_listeners(self, pkg_path: str, names: list):
         """
         导入包目录下所有的监听器
@@ -117,15 +120,15 @@ class PluginLoader:
                 name = name[0:len(name) - 3]
             mod_path = f'{pkg_path}.{name}'
             mod = self.import_mod(mod_path)
-            listener: EventListener = self.new_instance_with_context(
-                TypeUtils.find_subclass_from_mod(mod, EventListener))
+            listener: EventListener = new_plugin_instance(
+                TypeUtils.find_subclass_from_mod(mod, EventListener), self.mbot)
             if not listener:
                 continue
             self.mbot.event_bus.add_listener(listener)
             listeners.append(listener)
         return listeners
 
-    def import_tasks(self, pkg_path: str, names: list) -> List[Task]:
+    def import_tasks(self, pkg_path: str, names: list):
         """
         导入包目录下所有的任务
         :param pkg_path:
@@ -134,17 +137,17 @@ class PluginLoader:
         """
         if not names or len(names) == 0:
             return
-        tasks: List[Task] = []
+        # tasks: List[Task] = []
         for name in names:
             if name.endswith('.py'):
                 name = name[0:len(name) - 3]
             cls_path = f'{pkg_path}.{name}'
             mod = self.import_mod(cls_path)
-            task: Task = self.new_instance_with_context(TypeUtils.find_subclass_from_mod(mod, Task))
-            if not task:
-                continue
-            tasks.append(task)
-        return tasks
+            # task: Task = self.new_instance_with_context(TypeUtils.find_subclass_from_mod(mod, Task))
+            # if not task:
+            #     continue
+            # tasks.append(task)
+        # return tasks
 
     def setup(self, plugin_path) -> Plugin:
         """
@@ -161,7 +164,7 @@ class PluginLoader:
         # 加载插件中的监听器
         listeners = self.import_listeners(full_mod_name, manifest.listeners)
         # 加载插件中的任务
-        tasks = self.import_tasks(full_mod_name, manifest.tasks)
-        plugin = Plugin(full_mod_name, manifest, listeners, tasks)
+        self.import_tasks(full_mod_name, manifest.tasks)
+        plugin = Plugin(full_mod_name, manifest)
         self.mbot.plugins.update({full_mod_name: plugin})
         return plugin

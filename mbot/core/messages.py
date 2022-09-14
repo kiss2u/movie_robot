@@ -1,6 +1,6 @@
 """系统内队列、跨线程通信的模型类，部分文件可能再将来重构"""
 from mbot.common.serializable import Serializable
-from mbot.models.enums import TaskStatus
+from mbot.core.task import TaskStatus
 
 
 class WaitExponential(Serializable):
