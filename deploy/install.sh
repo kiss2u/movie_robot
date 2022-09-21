@@ -11,7 +11,7 @@ if ! which docker-compose >/dev/null; then
 fi
 ifNotExistsThenCreate() {
   if [ ! -d "$1" ]; then
-    mkdir -p "$1"
+    sudo mkdir -p "$1"
   fi
 }
 echo "███╗   ███╗ ██████╗ ██╗   ██╗██╗███████╗    ██████╗  ██████╗ ████████╗
@@ -148,4 +148,4 @@ echo "即将安装的MovieBot主要配置如下
   PUID: 0 PUID: 0
   配置文件目录为：$mbotDataDir
   媒体库路径）：$mediaDir"
-docker-compose up -d
+sudo docker-compose up -d
