@@ -1,5 +1,6 @@
 # Movie Robot 产品手册
-Telegram Channel: https://t.me/aimovierobot 作者会及时把产品的更新日志，发展动态，发到这个频道。
+用户社区Discord：https://discord.gg/SMauZCXgKx
+这里有最全面的产品动态，实时问答，玩法分享，体验激活申请区
 
 [Movie Robot WIki](https://yee329.notion.site/Movie-Robot-Wiki-9abef8c648c840fca47a0bf308957f85)
 * [开发计划](https://yee329.notion.site/7015972108424f14a1f2e15bde5205b4?v=6a041b4a727c48588134db8538e2b164)
