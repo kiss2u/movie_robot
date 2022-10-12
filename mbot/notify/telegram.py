@@ -1,4 +1,5 @@
 import logging
+import urllib
 
 import httpx
 from tenacity import stop_after_attempt, retry, wait_fixed
@@ -64,12 +65,15 @@ class TelegramNotify(Notify):
         if photo:
             if photo.endswith('.webp'):
                 photo = photo.replace('.webp', '.jpg')
+        f = open('out.jpg', 'wb')
+        f.write(urllib.request.urlopen(photo).read())
+        f.close()
+        photo = {'photo': open('out.jpg', 'rb')}
         if context and photo:
             url = '%s/bot%s/sendPhoto' % (self.server_url, self.token)
             data = {
                 'chat_id': user_id,
-                'parse_mode': 'Markdown',
-                'photo': photo,
+                'parse_mode': 'Markdown',                
                 'caption': message
             }
         else:
@@ -80,6 +84,6 @@ class TelegramNotify(Notify):
                 'text': message
             }
 
-        res = httpx.post(url, params=data, proxies=self.proxy).json()
+        res = httpx.post(url, params=data, proxies=self.proxy,files=photo).json()
         if not res["ok"]:
             logging.error('telegram推送失败：%s' % res["description"])
