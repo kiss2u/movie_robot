@@ -5,8 +5,6 @@
 TG Channel：https://t.me/aimovierobot 适合单项接收一些信息
 
 [Movie Robot WIki](https://yee329.notion.site/Movie-Robot-Wiki-9abef8c648c840fca47a0bf308957f85)
-* [开发计划](https://yee329.notion.site/7015972108424f14a1f2e15bde5205b4?v=6a041b4a727c48588134db8538e2b164)
-* [更新日志](https://yee329.notion.site/231dce04132642359e4a979e6b544ffd)
 
 **新人指南系列**
 * 1.[检查清单](https://www.notion.so/yee329/1-d8479e45ecbd4ed487726f86ddcfc3fd)
@@ -40,9 +38,7 @@ TG Channel：https://t.me/aimovierobot 适合单项接收一些信息
   * 全部媒体元数据，和媒体资源，均来自第三方网站
 
 # 使用须知
-**激活码获取方式：60元/每年 1688作者1小时远程技术指导附赠永久激活码。[点击查看支付宝付款码](https://yee-1254270141.cos.ap-beijing.myqcloud.com/movie_robot/alipay.jpg) 支付后请备注邮箱接收激活码**
-
-找到一个你认识的永久用户朋友，也可以帮你开通1个月免费体验
+**本软件需付费购买激活码后可以使用，[付费方式&价格&权益介绍](https://yee329.notion.site/b712e719e79b47f58ff374737609d3be)**
 
 # Docker官方镜像
 https://registry.hub.docker.com/r/yipengfei/movie-robot/
@@ -56,6 +52,7 @@ https://github.com/pofey/movie-robot-frontend
 <img src="https://raw.githubusercontent.com/pofey/movie_robot/main/doc/images/sublist.jpg" width="926" height="551"/>
 <img src="https://raw.githubusercontent.com/pofey/movie_robot/main/doc/images/download_dashboard.jpg" width="926" height="551"/>
 <img src="https://raw.githubusercontent.com/pofey/movie_robot/main/doc/images/site_dashboard.jpg" width="926" height="551"/>
+<img src="https://raw.githubusercontent.com/pofey/movie_robot/main/doc/images/plugin_market.jpg" width="926" height="551"/>
 
 ### 移动端：
 <img src="https://raw.githubusercontent.com/pofey/movie_robot/main/doc/images/webui-search.jpg" width="300" height="650"/><img src="https://raw.githubusercontent.com/pofey/movie_robot/main/doc/images/webui-downloading-dark.jpg" width="300" height="650"/>
