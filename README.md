@@ -46,6 +46,10 @@ https://registry.hub.docker.com/r/yipengfei/movie-robot/
 # 前端源代码
 https://github.com/pofey/movie-robot-frontend
 
+# 主程序可开源的源码
+程序中核心实现（事件处理、插件引擎），工具类，以及做插件开发时可能需要用到的内部实现全部开源，和主程序代码完全同步。为了插件开发者引用方便，代码独立到插件开发调试项目内。
+https://github.com/pofey/movie-bot-dev
+
 # 功能预览
 ## WebUI
 ### PC端：
